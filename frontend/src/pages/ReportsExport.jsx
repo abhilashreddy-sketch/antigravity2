@@ -68,7 +68,7 @@ const ReportsExport = () => {
                     <div className="flex flex-wrap items-center gap-3">
                       {/* PDF download link with token query param */}
                       <a
-                        href={`http://localhost:5000/api/exports/pdf/${site.id}?token=${token}`}
+                        href={`${axios.defaults.baseURL || 'http://localhost:5001'}/api/exports/pdf/${site.id}?token=${token}`}
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 dark:border-rose-950/40 dark:bg-rose-950/20 dark:text-rose-400 dark:hover:bg-rose-900/20 transition-all"
@@ -78,7 +78,7 @@ const ReportsExport = () => {
 
                       {/* CSV download link with token query param */}
                       <a
-                        href={`http://localhost:5000/api/exports/csv/${site.id}?token=${token}`}
+                        href={`${axios.defaults.baseURL || 'http://localhost:5001'}/api/exports/csv/${site.id}?token=${token}`}
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-center gap-1.5 rounded-xl border border-emerald-250 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-100 dark:border-emerald-950/40 dark:bg-emerald-950/20 dark:text-emerald-400 dark:hover:bg-emerald-900/20 transition-all"
