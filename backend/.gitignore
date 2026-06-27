@@ -1,3 +1,5 @@
 node_modules/
 dist-desktop/
 .env
+frontend/dist/
+backend/database.sqlite
