@@ -1,0 +1,54 @@
+{
+  "name": "construct-ai-desktop",
+  "version": "1.0.0",
+  "description": "ConstructAI Desktop Application for Windows",
+  "main": "main.js",
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "build:frontend": "cd frontend && npm run build",
+    "start:desktop": "cross-env NODE_ENV=development electron .",
+    "build:desktop": "npm run build:frontend && electron-builder --win --dir",
+    "package:desktop": "npm run build:frontend && electron-builder --win"
+  },
+  "dependencies": {
+    "@google/genai": "^2.8.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.9.7",
+    "nodemailer": "^6.9.13",
+    "pdfkit": "^0.15.0",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.constructai.tracker",
+    "productName": "ConstructAI",
+    "files": [
+      "main.js",
+      "backend/**/*",
+      "frontend/dist/**/*"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/sqlite3"
+    ],
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  }
+}
