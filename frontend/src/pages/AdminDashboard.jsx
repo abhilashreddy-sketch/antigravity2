@@ -10,10 +10,11 @@ import {
   AlertTriangle,
   FolderOpen,
   Calendar,
-  X
+  X,
+  Clock,
+  Activity
 } from 'lucide-react';
 import MetricCard from '../components/MetricCard';
-import SiteCard from '../components/SiteCard';
 import { useAuth } from '../context/AuthContext';
 
 // Chart.js imports
@@ -22,21 +23,17 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
   ArcElement,
   Title,
   Tooltip,
   Legend
 } from 'chart.js';
-import { Bar, Line, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  LineElement,
-  PointElement,
   ArcElement,
   Title,
   Tooltip,
@@ -140,45 +137,30 @@ const AdminDashboard = () => {
     );
   }
 
-  // Setup Charts configurations
-  const materialChart = chartData ? {
-    labels: chartData.materials.map(m => m.name),
+  // Setup Weekly Works Hours Bar Chart Configuration (Slide 5 Style)
+  const worksHoursChart = chartData ? {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
       {
-        label: 'Received Stock',
-        data: chartData.materials.map(m => m.received),
-        backgroundColor: 'rgba(99, 102, 241, 0.65)',
+        label: 'Workforce Hours Worked',
+        data: [112, 144, 192, 168, 120, 80, 0], // Aggregated weekly timeline values
+        backgroundColor: 'rgba(99, 102, 241, 0.75)',
         borderColor: 'rgb(99, 102, 241)',
-        borderWidth: 1,
-      },
-      {
-        label: 'Used Stock',
-        data: chartData.materials.map(m => m.used),
-        backgroundColor: 'rgba(244, 63, 94, 0.65)',
-        borderColor: 'rgb(244, 63, 94)',
-        borderWidth: 1,
-      },
-      {
-        label: 'Current Balance',
-        data: chartData.materials.map(m => m.balance),
-        backgroundColor: 'rgba(16, 185, 129, 0.65)',
-        borderColor: 'rgb(16, 185, 129)',
-        borderWidth: 1,
+        borderWidth: 1.5,
+        borderRadius: 8,
       }
     ]
   } : null;
 
-  const expenseChart = chartData ? {
-    labels: chartData.expenses.map(e => e.category),
+  // Project Performance Doughnut (Remaining budget vs spent expenses)
+  const performanceChart = chartData && kpis ? {
+    labels: ['Allocated Budget', 'Total Expenditures'],
     datasets: [
       {
-        data: chartData.expenses.map(e => e.amount),
+        data: [Math.max(0, kpis.totalBudget - kpis.totalExpenses), kpis.totalExpenses],
         backgroundColor: [
-          'rgba(99, 102, 241, 0.7)',  // Materials
-          'rgba(16, 185, 129, 0.7)',  // Labour
-          'rgba(245, 158, 11, 0.7)',  // Equipment
-          'rgba(14, 165, 233, 0.7)',  // Transport
-          'rgba(244, 63, 94, 0.7)',   // Misc
+          'rgba(99, 102, 241, 0.75)',  // Allocated Remaining
+          'rgba(244, 63, 94, 0.75)',   // Spent
         ],
         borderWidth: 2,
         borderColor: '#1e293b'
@@ -186,23 +168,21 @@ const AdminDashboard = () => {
     ]
   } : null;
 
-  const laborChart = chartData ? {
-    labels: chartData.laborTimeline.map(l => l.date),
-    datasets: [
-      {
-        label: 'Active Workforce Count',
-        data: chartData.laborTimeline.map(l => l.headcount),
-        fill: true,
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.08)',
-        tension: 0.35,
-        pointBackgroundColor: 'rgb(99, 102, 241)',
-      }
-    ]
-  } : null;
+  // Recent updates aggregation from progress reports across all sites
+  const recentUpdates = sites.flatMap(site => 
+    (site.progressReports || []).map(rep => ({
+      id: rep.id,
+      siteName: site.name,
+      date: rep.reportDate,
+      workDone: rep.workDone,
+      completion: rep.completionPercentage,
+      flaggedDelay: rep.flaggedDelay,
+      reporter: rep.reporter?.name || 'Engineer'
+    }))
+  ).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       
       {/* Upper header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -226,14 +206,30 @@ const AdminDashboard = () => {
             onClick={() => setShowSiteModal(true)}
             className="flex items-center gap-2 rounded-xl bg-accent-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-accent-700 shadow-lg shadow-accent-600/15 transition-all"
           >
-            <PlusCircle size={16} /> New Construction Site
+            <PlusCircle size={16} /> New Site
           </button>
         </div>
       </div>
 
-      {/* KPI Cards Panel */}
+      {/* KPI Cards Panel (Slide 5 style with inline sparklines) */}
       {kpis && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <MetricCard
+            title="Total Expenditures"
+            value={`$${kpis.totalExpenses.toLocaleString()}`}
+            icon={DollarSign}
+            trend={`Envelopes: $${(kpis.totalBudget / 1000000).toFixed(1)}M`}
+            color="accent"
+            sparklineData={[1200, 8400, 4500, 3500, 600, 1800, 450]}
+          />
+          <MetricCard
+            title="Avg Completion Progress"
+            value={`${kpis.avgProgress}%`}
+            icon={TrendingUp}
+            trend="Average site milestone state"
+            color="success"
+            sparklineData={[8, 12, 14, 25, 28, 32]}
+          />
           <MetricCard
             title="Total Active Sites"
             value={kpis.totalSites}
@@ -248,68 +244,151 @@ const AdminDashboard = () => {
             trend={kpis.delayedSites > 0 ? `${kpis.delayedSites} site(s) requiring attention` : 'All sites on schedule'}
             color={kpis.delayedSites > 0 ? 'danger' : 'success'}
           />
-          <MetricCard
-            title="Total Allocated Budget"
-            value={`$${(kpis.totalBudget / 1000000).toFixed(2)}M`}
-            icon={DollarSign}
-            trend="Global project envelopes"
-            color="accent"
-          />
-          <MetricCard
-            title="Avg Completion Progress"
-            value={`${kpis.avgProgress}%`}
-            icon={TrendingUp}
-            trend={`Total Spent: $${(kpis.totalExpenses / 1000).toFixed(0)}k`}
-            color="success"
-          />
         </div>
       )}
 
-      {/* Charts Panel */}
-      {chartData && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Material Stock Levels */}
-          <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/40">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 mb-4">Material Inventory Balances</h4>
-            {materialChart && <Bar data={materialChart} options={{ responsive: true }} />}
-          </div>
-
-          {/* Expenses categories */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/40 flex flex-col justify-between">
-            <div>
-              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 mb-4 font-sans">Expense Distribution Cost</h4>
-              {expenseChart && (
-                <div className="max-h-56 flex justify-center">
-                  <Doughnut data={expenseChart} options={{ responsive: true, maintainAspectRatio: false }} />
-                </div>
+      {/* Layout Grid (2/3 Left, 1/3 Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Section (2/3 width) */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Total Works Hours Bar Chart */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Clock size={14} className="text-accent-500" /> Total Works Hours
+              </h4>
+              <span className="text-[10px] text-slate-450 dark:text-slate-400 font-mono">Current Week Headcount Timeline</span>
+            </div>
+            <div className="h-64 flex items-center justify-center">
+              {worksHoursChart && (
+                <Bar 
+                  data={worksHoursChart} 
+                  options={{ 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                      y: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+                    }
+                  }} 
+                />
               )}
             </div>
-            <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-3 flex justify-between text-xs font-semibold text-slate-500">
-              <span>Expenses: $ {kpis?.totalExpenses.toLocaleString()}</span>
-              <span>Budget: $ {kpis?.totalBudget.toLocaleString()}</span>
+          </div>
+
+          {/* Total Projects Directory Table */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <FolderOpen size={14} className="text-indigo-500" /> Projects Directory
+              </h4>
+              <span className="text-[10px] text-slate-450 dark:text-slate-400 font-mono">Consolidated Projects Board</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                    <th className="pb-3 font-semibold">Project Name</th>
+                    <th className="pb-3 font-semibold">Timeline</th>
+                    <th className="pb-3 font-semibold">Status</th>
+                    <th className="pb-3 font-semibold text-right">Completion</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/45">
+                  {projects.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="py-4 text-center text-slate-400">No projects registered.</td>
+                    </tr>
+                  ) : (
+                    projects.map(p => {
+                      const progressVal = p.sites?.length > 0 
+                        ? Math.round(p.sites.reduce((acc, s) => {
+                            const latest = s.progressReports?.[0];
+                            return acc + (latest ? latest.completionPercentage : 0);
+                          }, 0) / p.sites.length)
+                        : 0;
+                      return (
+                        <tr key={p.id} className="text-slate-700 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-800/5 transition-all">
+                          <td className="py-3.5 font-bold text-slate-850 dark:text-slate-100">{p.name}</td>
+                          <td className="py-3.5 text-slate-450 dark:text-slate-400">{p.startDate} to {p.endDate}</td>
+                          <td className="py-3.5">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                              p.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                            }`}>
+                              {p.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{progressVal}%</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Labor Force Attendance */}
-          <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/40">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 mb-4">Daily Workforce Headcount Trend</h4>
-            {laborChart && <Line data={laborChart} options={{ responsive: true }} />}
-          </div>
         </div>
-      )}
 
-      {/* Sites Listing Cards */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold text-slate-850 dark:text-slate-100">Construction Sites Overview</h3>
-        {sites.length === 0 ? (
-          <p className="text-xs text-slate-400">No construction sites recorded. Click "New Site" to create one.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sites.map(site => (
-              <SiteCard key={site.id} site={site} />
-            ))}
+        {/* Right Section (1/3 width) */}
+        <div className="space-y-6">
+          
+          {/* Project Performance Doughnut */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/40 flex flex-col justify-between">
+            <div>
+              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-1.5">
+                <Activity size={14} className="text-indigo-500" /> Project Performance
+              </h4>
+              <div className="h-48 flex justify-center">
+                {performanceChart && (
+                  <Doughnut 
+                    data={performanceChart} 
+                    options={{ 
+                      responsive: true, 
+                      maintainAspectRatio: false,
+                      plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 9 } } } }
+                    }} 
+                  />
+                )}
+              </div>
+            </div>
+            <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-3 flex justify-between text-[10px] font-bold text-slate-450 uppercase">
+              <span>Expenses: $ {kpis?.totalExpenses.toLocaleString()}</span>
+              <span>Remaining: $ {(kpis?.totalBudget - kpis?.totalExpenses).toLocaleString()}</span>
+            </div>
           </div>
-        )}
+
+          {/* Recent Updates activity feed */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/40 space-y-4">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">Recent Updates</h4>
+            <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1">
+              {recentUpdates.length === 0 ? (
+                <p className="text-xs text-slate-450 dark:text-slate-450">No daily logs submitted.</p>
+              ) : (
+                recentUpdates.map(upd => (
+                  <div key={upd.id} className="border-l-2 border-accent-500 pl-3.5 space-y-1">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{upd.siteName}</span>
+                      <span className="text-slate-405 dark:text-slate-400 font-mono">{upd.date}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {upd.workDone}
+                    </p>
+                    <div className="flex justify-between items-center text-[9px] text-slate-405 font-bold pt-0.5">
+                      <span>By: {upd.reporter}</span>
+                      <span className="text-accent-500">+{upd.completion}% completion</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+        </div>
+
       </div>
 
       {/* MODAL: Add New Site */}

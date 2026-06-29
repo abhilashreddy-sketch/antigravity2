@@ -10,6 +10,10 @@ import EngineerDashboard from './pages/EngineerDashboard';
 import SitesList from './pages/SitesList';
 import SiteDetail from './pages/SiteDetail';
 import ReportsExport from './pages/ReportsExport';
+import Analytics from './pages/Analytics';
+import Projects from './pages/Projects';
+import Messages from './pages/Messages';
+import Settings from './pages/Settings';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -73,6 +77,10 @@ const DashboardLayout = () => {
             <Route path="/sites" element={<SitesList />} />
             <Route path="/sites/:id" element={<SiteDetail />} />
             <Route path="/exports" element={<ReportsExport />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>

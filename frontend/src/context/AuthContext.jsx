@@ -3,8 +3,8 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
-// Configure axios base url to respect local proxy
-axios.defaults.baseURL = 'http://localhost:5001';
+// Configure axios base url to respect local proxy/hosted environments
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || window.location.origin;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

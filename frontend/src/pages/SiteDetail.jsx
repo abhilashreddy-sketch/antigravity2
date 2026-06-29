@@ -288,7 +288,7 @@ const SiteDetail = () => {
                             {rep.photos.map(photo => (
                               <div key={photo.id} className="relative h-28 w-40 overflow-hidden rounded-xl border border-slate-100 dark:border-slate-850">
                                 <img 
-                                  src={`${axios.defaults.baseURL || 'http://localhost:5001'}/${photo.photoUrl}`} 
+                                  src={`${axios.defaults.baseURL || ''}/${photo.photoUrl}`} 
                                   alt="Construction site report attachment" 
                                   className="h-full w-full object-cover"
                                   onError={(e) => {

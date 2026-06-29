@@ -1,7 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const MetricCard = ({ title, value, icon: Icon, trend, trendType = 'neutral', color = 'accent' }) => {
+import Sparkline from './Sparkline';
+
+const MetricCard = ({ title, value, icon: Icon, trend, trendType = 'neutral', color = 'accent', sparklineData }) => {
   const getColorStyles = (col) => {
     switch (col) {
       case 'success':
@@ -53,12 +55,19 @@ const MetricCard = ({ title, value, icon: Icon, trend, trendType = 'neutral', co
           <Icon size={20} />
         </div>
       </div>
-      <div className="mt-4 space-y-1">
-        <h3 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">{value}</h3>
-        {trend && (
-          <p className={`text-xs font-semibold ${getTrendColor(trendType)}`}>
-            {trend}
-          </p>
+      <div className="flex items-end justify-between mt-4">
+        <div className="space-y-1">
+          <h3 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">{value}</h3>
+          {trend && (
+            <p className={`text-xs font-semibold ${getTrendColor(trendType)}`}>
+              {trend}
+            </p>
+          )}
+        </div>
+        {sparklineData && (
+          <div className="mb-1">
+            <Sparkline data={sparklineData} color={color === 'success' ? 'text-emerald-500' : 'text-accent-500'} />
+          </div>
         )}
       </div>
     </motion.div>

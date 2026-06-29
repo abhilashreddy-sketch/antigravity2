@@ -9,7 +9,10 @@ import {
   LogOut, 
   Settings,
   Users,
-  ChevronLeft
+  ChevronLeft,
+  TrendingUp,
+  FolderOpen,
+  MessageSquare
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, setOpen }) => {
@@ -26,9 +29,13 @@ const Sidebar = ({ isOpen, setOpen }) => {
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Sites', path: '/sites', icon: MapPin },
+    { name: 'Overview', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Analytics', path: '/analytics', icon: TrendingUp },
+    { name: 'Projects', path: '/projects', icon: FolderOpen },
+    { name: 'Sites Directory', path: '/sites', icon: MapPin },
+    { name: 'Messages', path: '/messages', icon: MessageSquare },
     { name: 'Reports Center', path: '/exports', icon: FileSpreadsheet },
+    { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
   return (
