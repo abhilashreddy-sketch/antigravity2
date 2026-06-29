@@ -11,7 +11,7 @@ const {
   Notification,
 } = require('./models');
 
-const seedDatabase = async () => {
+const seedDatabase = async (shouldClose = false) => {
   try {
     console.log('Synchronizing database models...');
     // Sync models (force true will recreate tables)
@@ -258,13 +258,15 @@ const seedDatabase = async () => {
   } catch (error) {
     console.error('Error seeding database:', error);
   } finally {
-    await sequelize.close();
+    if (shouldClose) {
+      await sequelize.close();
+    }
   }
 };
 
 // If run directly
 if (require.main === module) {
-  seedDatabase();
+  seedDatabase(true);
 }
 
 module.exports = seedDatabase;

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { sequelize } = require('./models');
+const { sequelize, User } = require('./models');
 require('dotenv').config();
 
 const app = express();
@@ -79,6 +79,21 @@ const startServer = async () => {
     // Sync database models (creates tables if they don't exist)
     await sequelize.sync();
     console.log('Database schemas synchronized.');
+
+    // Auto-seed if database is empty
+    try {
+      const userCount = await User.count();
+      if (userCount === 0) {
+        console.log('No users found in database. Running auto-seeding...');
+        const seedDatabase = require('./seed');
+        await seedDatabase(false);
+        console.log('Database auto-seeded successfully.');
+      } else {
+        console.log(`Database already initialized with ${userCount} users.`);
+      }
+    } catch (seedError) {
+      console.error('Failed to check or auto-seed database:', seedError);
+    }
 
     app.listen(PORT, () => {
       console.log(`[Server Running] Server listening on http://localhost:${PORT}`);
